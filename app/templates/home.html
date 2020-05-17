@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block main %}
+<h1 class="page-header">Flask Login SQLite based</h1>
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+  <div class="alert alert-success">
+    <ul>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+{% endwith %}
+<p class="lead">Flash based Login with SQlite DB.</p>
+{% endblock %}
