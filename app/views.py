@@ -60,16 +60,16 @@ def login():
     return render_template('login.html', form=login_form)
 
     
-@app.route('/')
+@app.route('/home')
 @is_logged_in
 def home():
     """Render website's home page."""
     return render_template('home.html')    
 
-@app.route('/about/')
+@app.route('/')
 def about():
     """Render the website's about page."""
-    return render_template('about.html', name="Mary Jane")
+    return render_template('about.html', name=" Flask - SQLite - Authentication. Please Login")
 
 @app.route('/users')
 @is_logged_in
@@ -85,11 +85,10 @@ def add_user():
 
     if request.method == 'POST':
         if user_form.validate_on_submit():
-            # Get validated data from form
-            name = user_form.name.data # You could also have used request.form['name']
-            email = user_form.email.data # You could also have used request.form['email']
-            username = user_form.username.data # You could also have used request.form['email']
-            password = sha256_crypt.encrypt(str(user_form.password.data)) # You could also have used request.form['email']
+            name = user_form.name.data
+            email = user_form.email.data
+            username = user_form.username.data
+            password = sha256_crypt.encrypt(str(user_form.password.data))
 
             # save user to database
             user = User(name, email, username, password)
@@ -102,8 +101,36 @@ def add_user():
     flash_errors(user_form)
     return render_template('add_user.html', form=user_form)
 
+# Update User
+@app.route('/edit_user/<int:user_id>', methods=['POST', 'GET'])
+@is_logged_in
+def edit_user(user_id):
+    user = User.query.filter_by(id=user_id).first()
+    user_form = UserForm()
+    if request.method == 'GET':
+        user_form.name.data = user.name
+        user_form.email.data = user.email
+        user_form.username.data = user.username
+    if request.method == 'POST':
+        if user_form.validate_on_submit():
+            name = request.form['name']
+            email = request.form['email']
+            username = request.form['username']
+            password = sha256_crypt.encrypt(str(request.form['password']))
+
+            # save user to database
+            db.session.query(User).filter_by(id=user_id).update({"name":name, "email":email, "username":username, "password":password})
+            db.session.commit()
+
+            flash('User '+ name +' successfully updated')
+            return redirect(url_for('show_users'))
+
+    flash_errors(user_form)
+    return render_template('edit_user.html', form=user_form,usid=user_id)
+
+
 # Delete User
-@app.route('/delete_user/<string:user_id>', methods=['POST'])
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
 @is_logged_in
 def delete_user(user_id):
     # Query user row
